@@ -1,458 +1,197 @@
-\# STM32 TinyML Weather Monitoring
+STM32 TinyML Weather Monitoring
 
+Projeto de monitoramento de temperatura e umidade utilizando a placa **NUCLEO-H755ZI-Q**, o microcontrolador **STM32H755** e o sensor **DHT11**.
 
+O objetivo é desenvolver um sistema embarcado capaz de coletar dados ambientais, processar essas informações e evoluir gradualmente para a execução de um modelo de Machine Learning diretamente no microcontrolador.
 
-TinyML project developed for the \*\*STM32H755\*\* microcontroller using the \*\*NUCLEO-H755ZI-Q\*\* development board and a \*\*DHT11 temperature and humidity sensor\*\*.
+Hardware utilizado
 
+* NUCLEO-H755ZI-Q
+* STM32H755
+* Sensor DHT11
+* Cabo USB para programação, depuração e comunicação serial
 
+Estado atual do projeto
 
-The project explores the complete TinyML pipeline on an embedded system, starting with sensor data acquisition and feature extraction and progressing toward machine learning inference directly on the microcontroller.
+Atualmente, o firmware é capaz de:
 
+* Ler temperatura e umidade do sensor DHT11
+* Realizar uma leitura por segundo
+* Enviar os dados pela USART3
+* Armazenar as últimas 10 temperaturas
+* Trabalhar com janelas de 10 amostras
+* Calcular a média de temperatura de cada janela
+* Utilizar os LEDs da placa como resposta simples às leituras
 
+Funcionamento
 
-\## Current Status
+O sensor DHT11 é lido aproximadamente uma vez por segundo.
 
+Exemplo:
 
 
-\*\*Phase 2 — Data Acquisition and Feature Extraction\*\*
+Temperatura: 25 C | Umidade: 61 %
+Temperatura: 25 C | Umidade: 61 %
+Temperatura: 26 C | Umidade: 60 %
 
 
+As temperaturas são armazenadas em grupos de 10 amostras:
 
-The current firmware:
 
+25 25 26 25 26 26 25 25 26 26
 
 
-\* Reads temperature and humidity from a DHT11 sensor
+Após completar a janela, o programa calcula a média:
 
-\* Samples the sensor at \*\*1 Hz\*\*
+Media: 25.50 C
 
-\* Sends measurements through \*\*USART3\*\*
 
-\* Stores temperature samples in a \*\*10-sample window\*\*
+Fluxo atual:
 
-\* Calculates the mean temperature of each window
-
-\* Uses the onboard LEDs for simple rule-based behavior
-
-\* Prepares the data pipeline for future TinyML inference
-
-
-
-Example serial output:
-
-
-
-```text
-
-========================================
-
-&#x20;STM32H755 - DHT11 - Phase 2 TinyML
-
-========================================
-
-Sampling: 1 Hz
-
-Window: 10 temperatures
-
-========================================
-
-
-
-Sample\[0]: Temperature: 25 C | Humidity: 61 %
-
-Sample\[1]: Temperature: 25 C | Humidity: 61 %
-
-Sample\[2]: Temperature: 26 C | Humidity: 60 %
-
-
-
-...
-
-
-
-Buffer complete: 25 25 26 25 26 26 25 25 26 26
-
-Mean: 25.50 C
-
-```
-
-
-
-\## Hardware
-
-
-
-\* \*\*STMicroelectronics NUCLEO-H755ZI-Q\*\*
-
-\* \*\*STM32H755ZI\*\*
-
-
-
-&#x20; \* Arm Cortex-M7
-
-&#x20; \* Arm Cortex-M4
-
-\* \*\*DHT11 temperature and humidity sensor\*\*
-
-\* USB connection for programming, debugging and serial communication
-
-
-
-\## Software
-
-
-
-\* STM32CubeIDE
-
-\* STM32CubeMX
-
-\* STM32 HAL
-
-\* C
-
-\* Git / GitHub
-
-
-
-\## Project Structure
-
-
-
-```text
-
-H755\_TinyMl\_temperatura/
-
-│
-
-├── CM4/
-
-│
-
-├── CM7/
-
-│   └── Core/
-
-│       ├── Inc/
-
-│       └── Src/
-
-│
-
-├── Common/
-
-├── Drivers/
-
-├── .settings/
-
-│
-
-├── .gitignore
-
-├── .mxproject
-
-├── .project
-
-├── H755\_TinyMl\_temperatura.ioc
-
-└── serial.ps1
-
-```
-
-
-
-\## Data Acquisition Pipeline
-
-
-
-The current processing pipeline is:
-
-
-
-```text
 
 DHT11
+  ↓
+Leitura de temperatura e umidade
+  ↓
+Amostragem de 1 Hz
+  ↓
+Janela com 10 temperaturas
+  ↓
+Processamento
+  ↓
+Cálculo da média
 
-&#x20; │
+Comunicação serial
 
-&#x20; ▼
+A comunicação com o computador é feita pela USART3, utilizando a porta serial virtual do ST-LINK.
 
-Temperature + Humidity
-
-&#x20; │
-
-&#x20; ▼
-
-1 sample / second
-
-&#x20; │
-
-&#x20; ▼
-
-10-sample temperature window
-
-&#x20; │
-
-&#x20; ▼
-
-Feature Extraction
-
-&#x20; │
-
-&#x20; ▼
-
-Mean Temperature
-
-```
+Configuração:
 
 
-
-Each window contains approximately \*\*10 seconds of temperature data\*\*.
-
-
-
-For example:
-
-
-
-```text
-
-24 24 24 25 25 25 25 26 26 27
-
-```
-
-
-
-is transformed into a feature such as:
-
-
-
-```text
-
-Mean = 25.10 °C
-
-```
-
-
-
-This is the first step toward converting raw sensor data into features suitable for a machine learning model.
-
-
-
-\## Serial Communication
-
-
-
-USART3 is configured for communication through the ST-LINK Virtual COM Port.
-
-
-
-Configuration:
-
-
-
-```text
-
-Baud rate: 115200
-
+Baud Rate: 115200
 Data bits: 8
-
 Stop bits: 1
-
-Parity: None
-
-```
+Paridade: nenhuma
 
 
-
-Sensor measurements and calculated features can therefore be monitored directly from a serial terminal.
-
+Exemplo de saída:
 
 
-\## TinyML Roadmap
+========================================
+ STM32H755 - DHT11 - Fase 2 TinyML
+========================================
+Amostragem: 1 Hz
+Janela: 10 temperaturas
+========================================
+
+Amostra[0]: Temperatura: 25 C | Umidade: 61 %
+Amostra[1]: Temperatura: 25 C | Umidade: 61 %
+Amostra[2]: Temperatura: 26 C | Umidade: 60 %
+
+Buffer completo: 25 25 26 25 26 26 25 25 26 26
+
+Media: 25.50 C
 
 
-
-The project will progressively evolve from traditional embedded programming to an embedded machine learning application.
-
+ Estrutura do projeto
 
 
-\* \[x] Read temperature and humidity from DHT11
-
-\* \[x] Send sensor data through UART
-
-\* \[x] Implement fixed sampling frequency
-
-\* \[x] Create a sample window
-
-\* \[x] Calculate the first feature: mean
-
-\* \[ ] Add additional statistical features
-
-\* \[ ] Collect and export a dataset
-
-\* \[ ] Analyze and preprocess the dataset
-
-\* \[ ] Train a machine learning model
-
-\* \[ ] Evaluate model accuracy
-
-\* \[ ] Quantize the model to INT8
-
-\* \[ ] Convert the model for TensorFlow Lite Micro
-
-\* \[ ] Deploy the model to the STM32H755
-
-\* \[ ] Run inference on the Cortex-M7
-
-\* \[ ] Measure inference latency
-
-\* \[ ] Measure RAM and Flash usage
-
-\* \[ ] Compare rule-based logic with TinyML inference
+H755_TinyMl_temperatura/
+│
+├── CM4/
+├── CM7/
+├── Common/
+├── Drivers/
+├── .settings/
+│
+├── .gitignore
+├── .mxproject
+├── .project
+├── H755_TinyMl_temperatura.ioc
+├── README.md
+└── serial.ps1
 
 
+O código principal utilizado atualmente está no projeto do **Cortex-M7**.
 
-\## Goal
+Tecnologias utilizadas
+
+* C
+* STM32CubeIDE
+* STM32CubeMX
+* STM32 HAL
+* Git
+* GitHub
+
+Etapas concluídas
+
+* [x] Configuração inicial do STM32H755
+* [x] Comunicação serial pela USART3
+* [x] Integração com o sensor DHT11
+* [x] Leitura de temperatura
+* [x] Leitura de umidade
+* [x] Amostragem de 1 Hz
+* [x] Buffer com 10 temperaturas
+* [x] Cálculo da média
+
+Próximas etapas
+
+* [ ] Implementar novas características dos dados
+* [ ] Calcular temperatura mínima e máxima
+* [ ] Calcular variação
+* [ ] Calcular desvio padrão
+* [ ] Coletar dados para criação do dataset
+* [ ] Exportar e analisar os dados
+* [ ] Treinar um modelo de Machine Learning
+* [ ] Avaliar o modelo
+* [ ] Quantizar o modelo para INT8
+* [ ] Converter o modelo para TensorFlow Lite Micro
+* [ ] Executar inferência no STM32H755
+* [ ] Medir tempo de inferência
+* [ ] Medir uso de RAM
+* [ ] Medir uso de memória Flash
+
+Objetivo final
+
+O objetivo final é construir todo o fluxo, desde a leitura do sensor até a inferência diretamente no STM32H755:
 
 
-
-The main goal of this project is to understand how a complete TinyML system is built on a microcontroller:
-
-
-
-```text
-
-Sensor
-
-&#x20;  ↓
-
-Data Acquisition
-
-&#x20;  ↓
-
-Signal / Data Processing
-
-&#x20;  ↓
-
-Feature Extraction
-
-&#x20;  ↓
-
+DHT11
+  ↓
+Coleta de dados
+  ↓
+Processamento
+  ↓
+Extração de características
+  ↓
 Dataset
-
-&#x20;  ↓
-
-Machine Learning
-
-&#x20;  ↓
-
-Model Quantization
-
-&#x20;  ↓
-
-Embedded Deployment
-
-&#x20;  ↓
-
-Inference on STM32
-
-```
-
-
-
-Rather than starting directly with a trained model, the project is being developed incrementally to understand each stage of the embedded machine learning pipeline.
-
-
-
-\## Development Board
-
-
-
-The project uses the \*\*NUCLEO-H755ZI-Q\*\*, based on the dual-core STM32H755 microcontroller.
-
-
-
-The architecture provides:
-
-
-
-```text
-
-STM32H755
-
-├── Cortex-M7
-
-└── Cortex-M4
-
-```
-
-
-
-Future versions of the project may explore how the two cores can be used for different parts of the sensing and inference pipeline.
-
-
-
-\## Future Work
-
-
-
-Future development will focus on:
-
-
-
-\* Additional feature extraction
-
-\* Environmental data collection
-
-\* Dataset generation
-
-\* Machine learning model training
-
-\* INT8 quantization
-
-\* TensorFlow Lite for Microcontrollers
-
-\* Embedded inference
-
-\* Performance benchmarking
-
-\* RAM and Flash optimization
-
-\* Inference latency analysis
-
-
-
-\## Author
-
-
-
-\*\*Ian Godoi\*\*
-
-
-
-Computer Science student interested in:
-
-
-
-\* Embedded Systems
-
-\* TinyML
-
-\* Digital Signal Processing
-
-\* Machine Learning
-
-\* C/C++
-
-\* STM32
-
-
-
-\## Repository
-
-
-
-`stm32-tinyml-weather`
-
-
-
+  ↓
+Treinamento
+  ↓
+Quantização INT8
+  ↓
+TensorFlow Lite Micro
+  ↓
+Inferência no STM32H755
+
+
+O projeto também pretende avaliar aspectos importantes da execução embarcada, como:
+
+* Latência
+* Uso de RAM
+* Uso de Flash
+* Quantização
+* Otimização
+
+ Autor
+
+**Ian Godoi**
+
+Estudante de Ciência da Computação com interesse em:
+
+* Sistemas Embarcados
+* TinyML
+* Processamento Digital de Sinais
+* Machine Learning
+* C/C++
+* STM32
